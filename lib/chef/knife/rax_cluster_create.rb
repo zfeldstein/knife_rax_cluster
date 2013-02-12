@@ -1,4 +1,4 @@
-require 'rax_cluster_base'
+require 'chef/knife/rax_cluster_base'
 
 class Chef
   class Knife
@@ -15,7 +15,7 @@ class Chef
       end
       
       def run
-        puts "#{config[:rackspace_endpoint]}"
+        puts "#{Chef::Config[:knife][:rackspace_endpoint]}"
         
          
       end
