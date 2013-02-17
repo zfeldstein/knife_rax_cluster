@@ -39,6 +39,11 @@ class Chef
       :description => "Load balancer timeout",
       :proc => Proc.new { |timeout| Chef::Config[:knife][:timeout] = timeout}
       
+      option :generate_map_template,
+      :short => "-G",
+      :long => "--generate_map_template",
+      :description => "Generate server map Template in current dir named map_template.json"
+      
       option :session_persistence,
       :short => "-S on_or_off",
       :long => "--session-persistence session_persistence_on_or_off",
@@ -49,7 +54,7 @@ class Chef
            file_name = "./map_template.json"
            template = %q(
            {
-             "server_map" : [
+             "blue_print" : 
                {
                    "name_convention" : "web",
                    "run_list" : [
@@ -58,9 +63,9 @@ class Chef
                    "quantity" : 1,
                    "chef_env" : "dev",
                    "image_ref" : "a9753ff4-f46c-427d-9498-1358564f622f",
-                   "flavor" : 2,  
+                   "flavor" : 2
                    }
-             ]
+             
      
            }
      )
@@ -70,24 +75,45 @@ class Chef
       
       def deploy(blue_print)
         (File.exist?(blue_print)) ? map_contents = JSON.parse(File.read(blue_print)) : map_contents = JSON.parse(blue_print)
-        if map_contents.has_key?("server_map")
-          map_contents['server_map'].each {|i|
+        sleep_interval = 1
+        if map_contents.has_key?("blue_print")
+          bp_values = map_contents['blue_print']
               bootstrap_nodes = []
-              quantity = i['quantity'].to_i
+              quantity = bp_values['quantity'].to_i
               quantity.times do |node_name|
                   node_name  = rand(900000000)
-                  create_server = Chef::Knife::NarcissBuild.new
+                  create_server = Chef::Knife::RaxClusterBuild.new
                   create_server.config[:identity_file] = config[:identity_file]
-                  Chef::Config[:knife][:image] = i['image_ref']
-                  create_server.config[:chef_node_name] = i['name_convention'] + node_name.to_s
-                  create_server.config[:environment] = i['chef_env']
-                  Chef::Config[:environment] = i['chef_env']
+                  Chef::Config[:knife][:image] = bp_values['image_ref'] 
+                  create_server.config[:chef_node_name] = bp_values['name_convention'] + node_name.to_s 
+                  create_server.config[:environment] = bp_values['chef_env'] 
+                  Chef::Config[:environment] = bp_values['chef_env']
                   create_server.config[:ssh_user] = config[:ssh_user]
-                  create_server.config[:run_list] = i['run_list']
-                  Chef::Config[:knife][:flavor] = i['flavor']
+                  create_server.config[:run_list] = bp_values['run_list']
+                  Chef::Config[:knife][:flavor] = bp_values['flavor']
+                  begin
+                    bootstrap_nodes << Thread.new { Thread.current['server_return'] = create_server.run }
+                  rescue
+                    ui.msg "Bootstrapping failed"
+                  end
+                  
               end
-          }
+              quantity.times do |times|
+                if quantity > 20
+                  sleep_interval = 3
+                end
+                begin
+                  bootstrap_nodes[times].join
+                  sleep(sleep_interval)
+                rescue
+                  print "Bootstrap failed"
+                end
+                
+                
+              end
         end
+        
+        
       end
 
       def run
