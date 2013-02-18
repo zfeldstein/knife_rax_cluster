@@ -16,6 +16,7 @@ class Chef
 					require "net/https"
 					require 'net/http'
 					require "uri"
+					requie 'json'
 					#require 'chef/shef/ext'
 					#require 'rubygems'
 					#require 'chef/knife/rackspace_server_create'
@@ -53,7 +54,8 @@ class Chef
 					  :long => "--rackspace-api-auth-url URL",
 					  :description => "Your rackspace API auth url",
 					  :default => "auth.api.rackspacecloud.com",
-					  :proc => Proc.new { |url| Chef::Config[:knife][:rackspace_api_auth_url] = url }
+					  :proc => Proc.new { |url| Chef::Config[:knife][:rackspace_api_auth_url] = url },
+					  :default => "https://identity.api.rackspacecloud.com/v1.1/auth"
 		  
 					option :rackspace_endpoint,
 					  :long => "--rackspace-endpoint URL",
@@ -118,7 +120,21 @@ class Chef
 			  return response
 			  
 			end
-	
+			#Just used for lbaas since fog doesn't allow meta data on LB's
+			def authenticate(auth_url=Chef::Config[:knife][:rackspace_api_auth_url],username=Chef::Config[:knife][:rackspace_username],password=Chef::Config[:knife][:rackspace_api_key])
+				auth_json = {
+					"credentials" => {
+						"username" => username,
+						"key" => password
+					}
+				}
+				headers = {"Content-Type" => "application/json"}
+				auth_data = make_web_call('post', auth_url, headers, auth_json.to_json)
+				lb_data = JSON.parse(auth_data.body)
+				lb_returned = {'auth_token' => lb_data['auth']['serviceCatalog']['token']['id'], 'lb_urls' => [ lb_data['auth']['serviceCatalog']['cloudLoadBalancers']] }
+				return lb_returned
+			end
+			
 		end
 	end
 end

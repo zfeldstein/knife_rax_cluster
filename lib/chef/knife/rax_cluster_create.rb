@@ -4,7 +4,7 @@ require 'chef/knife/rackspace/rackspace_server_create'
 class Chef
   class Knife
     class RaxClusterCreate < Knife
-      attr_accessor :headers, :rax_endpoint 
+      attr_accessor :headers, :rax_endpoint, :lb_name 
       include Knife::RaxClusterBase
       banner "knife rax cluster create (cluster_name) [options]"
       deps do
@@ -19,7 +19,8 @@ class Chef
       :short => "-a Load_balacner_algorithm",
       :long => "--algorithm algorithm",
       :description => "Load balancer algorithm",
-      :proc => Proc.new { |algorithm| Chef::Config[:knife][:algorithm] = algorithm }
+      :proc => Proc.new { |algorithm| Chef::Config[:knife][:algorithm] = algorithm },
+      :default => "ROUND_ROBIN"
       
 	  option :blue_print,
 	  :short => "-B Blue_print_file",
@@ -31,24 +32,40 @@ class Chef
       :short => "-lb_port port",
       :long => "--load-balancer-port port",
       :description => "Load balancer port",
-      :proc => Proc.new { |port| Chef::Config[:knife][:port] = port}
+      :proc => Proc.new { |port| Chef::Config[:knife][:port] = port},
+      :default => "80"
       
       option :timeout,
       :short => "-t timeout",
       :long => "--load-balancer-timeout timeout",
       :description => "Load balancer timeout",
-      :proc => Proc.new { |timeout| Chef::Config[:knife][:timeout] = timeout}
+      :proc => Proc.new { |timeout| Chef::Config[:knife][:timeout] = timeout},
+      :default => "30"
+      
+      option :lb_region,
+      :short => "-r region",
+      :long => "--load-balancer-region region",
+      :description => "Load balancer region (only supports ORD || DFW)",
+      :proc => Proc.new { |timeout| Chef::Config[:knife][:lb_region] = lb_region},
+      :default => "ORD"
+      
+      option :protocol,
+      :short => "-p protocol",
+      :long => "--load-balancer-protocol protocol",
+      :description => "Load balancer protocol",
+      :proc => Proc.new { |protocol| Chef::Config[:knife][:protocol] = protocol},
+      :default => 'HTTP'
       
       option :generate_map_template,
       :short => "-G",
       :long => "--generate_map_template",
       :description => "Generate server map Template in current dir named map_template.json"
       
-      option :session_persistence,
-      :short => "-S on_or_off",
-      :long => "--session-persistence session_persistence_on_or_off",
-      :description => "Load balancer session persistence on or off",
-      :proc => Proc.new { |session_persistence| Chef::Config[:knife][:session_persistence] = session_persistence}
+      #option :session_persistence,
+      #:short => "-S on_or_off",
+      #:long => "--session-persistence session_persistence_on_or_off",
+      #:description => "Load balancer session persistence on or off",
+      #:proc => Proc.new { |session_persistence| Chef::Config[:knife][:session_persistence] = session_persistence}
 
       def generate_map_template
            file_name = "./map_template.json"
@@ -72,10 +89,48 @@ class Chef
      
            File.open(file_name, 'w') { |file| file.write(template)}
       end
+      def create_lb(instances)
+        lb_request = {
+          "loadBalancer" => {
+            "name" => @lb_name,
+            "port" => Chef::Config[:knife][:port],
+            "protocol" => Chef::Config[:knife][:protocol],
+            "algorithm" => Chef::Config[:knife][:algorithm],
+            "virtualIps" => [
+              {
+                "type" => "PUBLIC"
+              }
+            ],
+            "nodes" => [],
+            "metadata" => []
+          }
+        }
+        
+        instances.each {|inst|
+          lb_request['loadBalancer']['nodes'] << {"address" => inst['ip_address'], 'port' =>Chef::Config[:knife][:port], "condition" => "ENABLED" }
+          lb_request['loadBalancer']['metadata'] << {"key" => inst['server_name'], "value" => inst['uuid']}
+          }
+        lb_authenticate = authenticate()
+        lb_url = ""
+        lb_authenticate['lb_urls'].each {|lb|
+          if Chef::Config[:knife][:lb_region].to_s.downcase ==  lb['region'].to_s.downcase
+            lb_url = lb['publicURL']
+          end
+          if !lb_url
+            lb_url = lb['publicURL']
+          end
+          }
+        headers = {'Content-type' => 'application/json', 'x-auth-token' => lb_authenticate['auth_token']}
+        create_lb_call = make_web_call("post",lb_url, headers, lb_request.to_json )
+        ui.msg "Load balancer created sucessfully"
+        ui.msg "#{create_lb_call.body}"
+      end
+      
       
       def deploy(blue_print)
         (File.exist?(blue_print)) ? map_contents = JSON.parse(File.read(blue_print)) : map_contents = JSON.parse(blue_print)
         sleep_interval = 1
+        instances = []
         if map_contents.has_key?("blue_print")
           bp_values = map_contents['blue_print']
               bootstrap_nodes = []
@@ -108,10 +163,16 @@ class Chef
                 rescue
                   print "Bootstrap failed"
                 end
-                
-                
+                instances << {"server_name" => bootstrap_nodes[times]['server_return']['server_name'],
+                              "ip_address" => bootstrap_nodes[times]['server_return']['public_ip']['addr'],
+                              "uuid" => bootstrap_nodes[times]['server_return']['server_id'],
+                              "name_convention" => bp_values['name_convention'],
+                              "chef_env" => bp_values['chef_env'],
+                              "run_list" => bp_values['run_list']
+                              }
               end
         end
+        create_lb(instances)
         
         
       end
@@ -129,6 +190,8 @@ class Chef
 		  ui.fatal "Please specify a single name for your cluster"
 		  exit(1)
         end
+        #Set load balancer name
+        @lb_name = @name_args[0]
         
         if config[:blue_print]
           deploy(config[:blue_print])
