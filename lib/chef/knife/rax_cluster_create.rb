@@ -43,10 +43,10 @@ class Chef
       :default => "30"
       
       option :lb_region,
-      :short => "-r region",
-      :long => "--load-balancer-region region",
+      :short => "-r lb_region",
+      :long => "--load-balancer-region lb_region",
       :description => "Load balancer region (only supports ORD || DFW)",
-      :proc => Proc.new { |timeout| Chef::Config[:knife][:lb_region] = lb_region},
+      :proc => Proc.new { |lb_region| Chef::Config[:knife][:lb_region] = lb_region},
       :default => "ORD"
       
       option :protocol,
@@ -114,7 +114,7 @@ class Chef
         lb_url = ""
         lb_authenticate['lb_urls'].each {|lb|
           lb_url = lb['publicURL']
-          if Chef::Config[:knife][:lb_region].to_s.downcase ==  lb['region'].to_s.downcase
+          if config[:lb_region].to_s.downcase ==  lb['region'].to_s.downcase
             lb_url = lb['publicURL']
           end
           }
@@ -138,8 +138,8 @@ class Chef
         instances = []
         if map_contents.has_key?("blue_print")
           bp_values = map_contents['blue_print']
-              bootstrap_nodes = []
-              quantity = bp_values['quantity'].to_i
+          bootstrap_nodes = []
+          quantity = bp_values['quantity'].to_i
               quantity.times do |node_name|
                   node_name  = rand(900000000)
                   create_server = Chef::Knife::RaxClusterBuild.new
@@ -162,12 +162,10 @@ class Chef
                 if quantity > 20
                   sleep_interval = 3
                 end
-                begin
-                  bootstrap_nodes[times].join
-                  sleep(sleep_interval)
-                rescue
-                  print "Bootstrap failed"
-                end
+                puts times
+                puts bootstrap_nodes[times]
+                sleep(sleep_interval)
+                bootstrap_nodes[times].join              
                 instances << {"server_name" => bootstrap_nodes[times]['server_return']['server_name'],
                               "ip_address" => bootstrap_nodes[times]['server_return']['private_ip'],
                               "uuid" => bootstrap_nodes[times]['server_return']['server_id'],
