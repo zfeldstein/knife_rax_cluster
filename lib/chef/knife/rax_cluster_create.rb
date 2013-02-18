@@ -133,7 +133,7 @@ class Chef
       end
       
       
-      def deploy(blue_print)
+      def deploy(blue_print,update_cluster=nil)
         (File.exist?(blue_print)) ? map_contents = JSON.parse(File.read(blue_print)) : map_contents = JSON.parse(blue_print)
         sleep_interval = 1
         instances = []
@@ -173,7 +173,12 @@ class Chef
                               }
               end
         end
-        create_lb(instances)
+        if update_cluster
+          return instances
+        else
+          create_lb(instances)
+        end
+        
         
         
       end
