@@ -1,5 +1,5 @@
 require 'chef/knife/rax_cluster_base'
-require 'chef/knife/rackspace/rackspace_server_create'
+require 'chef/knife/rax_cluster_build'
 
 class Chef
   class Knife
@@ -93,9 +93,9 @@ class Chef
         lb_request = {
           "loadBalancer" => {
             "name" => @lb_name,
-            "port" => Chef::Config[:knife][:port],
-            "protocol" => Chef::Config[:knife][:protocol],
-            "algorithm" => Chef::Config[:knife][:algorithm],
+            "port" => config[:port] || '80',
+            "protocol" => config[:protocol] || 'HTTP',
+            "algorithm" => config[:algorithm] || 'ROUND_ROBIN',
             "virtualIps" => [
               {
                 "type" => "PUBLIC"
@@ -107,23 +107,28 @@ class Chef
         }
         
         instances.each {|inst|
-          lb_request['loadBalancer']['nodes'] << {"address" => inst['ip_address'], 'port' =>Chef::Config[:knife][:port], "condition" => "ENABLED" }
+          lb_request['loadBalancer']['nodes'] << {"address" => inst['ip_address'], 'port' =>Chef::Config[:knife][:port] || '80', "condition" => "ENABLED" }
           lb_request['loadBalancer']['metadata'] << {"key" => inst['server_name'], "value" => inst['uuid']}
           }
         lb_authenticate = authenticate()
         lb_url = ""
         lb_authenticate['lb_urls'].each {|lb|
+          lb_url = lb['publicURL']
           if Chef::Config[:knife][:lb_region].to_s.downcase ==  lb['region'].to_s.downcase
             lb_url = lb['publicURL']
           end
-          if !lb_url
-            lb_url = lb['publicURL']
-          end
           }
+        lb_url = lb_url + "/loadbalancers"
+        
         headers = {'Content-type' => 'application/json', 'x-auth-token' => lb_authenticate['auth_token']}
         create_lb_call = make_web_call("post",lb_url, headers, lb_request.to_json )
-        ui.msg "Load balancer created sucessfully"
-        ui.msg "#{create_lb_call.body}"
+        lb_details = JSON.parse(create_lb_call.body)
+        ui.msg "Load Balancer Cluster Sucesfully Created"
+        ui.msg "Load Balancer ID: #{lb_details['loadBalancer']['id']}"
+        ui.msg "Load Balancer Name: #{lb_details['loadBalancer']['name']}"
+        lb_ip = ""
+        lb_details['loadBalancer']['virtualIps'].each {|lb| (lb['ipVersion'] == "IPV4") ? lb_ip = lb['address'] : "not_found"}
+        ui.msg "Load Balancer IP Address: #{lb_ip}"
       end
       
       
@@ -138,12 +143,12 @@ class Chef
               quantity.times do |node_name|
                   node_name  = rand(900000000)
                   create_server = Chef::Knife::RaxClusterBuild.new
-                  create_server.config[:identity_file] = config[:identity_file]
+                  #create_server.config[:identity_file] = config[:identity_file]
                   Chef::Config[:knife][:image] = bp_values['image_ref'] 
                   create_server.config[:chef_node_name] = bp_values['name_convention'] + node_name.to_s 
                   create_server.config[:environment] = bp_values['chef_env'] 
                   Chef::Config[:environment] = bp_values['chef_env']
-                  create_server.config[:ssh_user] = config[:ssh_user]
+                  #create_server.config[:ssh_user] = config[:ssh_user]
                   create_server.config[:run_list] = bp_values['run_list']
                   Chef::Config[:knife][:flavor] = bp_values['flavor']
                   begin
@@ -164,7 +169,7 @@ class Chef
                   print "Bootstrap failed"
                 end
                 instances << {"server_name" => bootstrap_nodes[times]['server_return']['server_name'],
-                              "ip_address" => bootstrap_nodes[times]['server_return']['public_ip']['addr'],
+                              "ip_address" => bootstrap_nodes[times]['server_return']['private_ip'],
                               "uuid" => bootstrap_nodes[times]['server_return']['server_id'],
                               "name_convention" => bp_values['name_convention'],
                               "chef_env" => bp_values['chef_env'],
@@ -195,6 +200,7 @@ class Chef
         
         if config[:blue_print]
           deploy(config[:blue_print])
+      
         end
         
       end

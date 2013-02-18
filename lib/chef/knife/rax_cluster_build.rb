@@ -1,4 +1,4 @@
-require 'chef/knife/rackspace_base'
+
 require 'chef/knife/rackspace_server_create'
 class Chef
   class Knife
@@ -203,13 +203,13 @@ class Chef
         msg_pair("Environment", config[:environment] || '_default')
         msg_pair("Run List", config[:run_list].join(', '))
         ipaddress = ''
-        if not server.private_ip_address
-          ipaddress = server.public_ip_address
-        end
-        if not ipaddress
-          ipaddress = "false"
-        end
-        return_hash = {"public_ip" => ipaddress, "server_name" => server.name, "server_id" => server.id}
+        #if not server.private_ip_address
+        #  ipaddress = server.public_ip_address
+        #end
+        #if not ipaddress
+        #  ipaddress = "false"
+        #end
+        return_hash = {"public_ip" => public_ip(server), "private_ip" => private_ip(server), "server_name" => server.name, "server_id" => server.id}
         return return_hash
       end
       
