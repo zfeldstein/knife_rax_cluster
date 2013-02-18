@@ -113,10 +113,11 @@ class Chef
         lb_authenticate = authenticate()
         lb_url = ""
         lb_authenticate['lb_urls'].each {|lb|
-          lb_url = lb['publicURL']
           if config[:lb_region].to_s.downcase ==  lb['region'].to_s.downcase
             lb_url = lb['publicURL']
+            break
           end
+          lb_url = lb['publicURL']
           }
         lb_url = lb_url + "/loadbalancers"
         
@@ -148,7 +149,6 @@ class Chef
                   create_server.config[:chef_node_name] = bp_values['name_convention'] + node_name.to_s 
                   create_server.config[:environment] = bp_values['chef_env'] 
                   Chef::Config[:environment] = bp_values['chef_env']
-                  #create_server.config[:ssh_user] = config[:ssh_user]
                   create_server.config[:run_list] = bp_values['run_list']
                   Chef::Config[:knife][:flavor] = bp_values['flavor']
                   begin
@@ -162,8 +162,6 @@ class Chef
                 if quantity > 20
                   sleep_interval = 3
                 end
-                puts times
-                puts bootstrap_nodes[times]
                 sleep(sleep_interval)
                 bootstrap_nodes[times].join              
                 instances << {"server_name" => bootstrap_nodes[times]['server_return']['server_name'],
