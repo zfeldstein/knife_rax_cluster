@@ -65,6 +65,7 @@ class Chef
         if @name_args.empty?
           ui.fatal "Please specify a Load balancer ID to delete"
         end
+        ui.confirm("Are you sure you want to delete this Load balancer and ALL nodes associated with it?")
         delete_cluster
       end
       
