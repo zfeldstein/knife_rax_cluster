@@ -2,4 +2,48 @@
 
 = Description:
 
-This tool is used to 
+This plugin allows you to create rackspace "clusters". This tool hooks into opscode's knife-rackspace ruby gem. A rackspace cluster is a group of nodes that are behind a cloud load balancer. This tool allows you to specify a blueprint file containg: quantity of nodes, chef run list and environment, flavor and image to be used.
+
+= Installation
+
+Install the latest version of Chef:
+    sudo gem install chef
+    
+Install the knife rackspace cluster Gem:
+    sudo gem install knife-rackspace-cluster
+    
+= CONFIGURATION
+
+You will need to make the following entries into your knife.rb file in order to communicate with the rackspace API:
+    knife[:rackspace_api_username] = "username"
+    knife[:rackspace_api_key] =  "api_key"
+    knife[:rackspace_version] = 'v2'
+    knife[:rackspace_endpoint] = "https://ord.servers.api.rackspacecloud.com/v2"
+    
+Please see the knife-rackspace readme for more details on configuring your knife.rb
+
+= SUBCOMMANDS:
+
+This plugin provides the following sub commands:
+
+= knife rax cluster create
+
+This command requires that you pass it a name for your cloud load balancer and the -B (blueprint) flag followed by a blueprint file. You can generate a template file by running:
+    knife rax cluster create -G
+This will create a file called map_template.json in your current directory. An example template looks as follows:
+    {
+        "blue_print" :
+    {
+        "name_convention" : "web",
+        "run_list" : [
+        ],
+        "quantity" : 2,
+        "chef_env" : "dev",
+        "image_ref" : "c195ef3b-9195-4474-b6f7-16e5bd86acd0",
+        "flavor" : 2
+        }
+
+
+    }
+This will tell the plugin to build 2 servers and use the settings specified. The servers will be built using threads if you're using ruby 1.9. Once the servers have been built and bootstrapped with chef a load balancer will be created and the nodes will be added to the LB pool.
+
