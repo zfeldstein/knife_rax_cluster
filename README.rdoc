@@ -8,12 +8,14 @@ This tool hooks into opscode's knife-rackspace ruby gem. This plugin allows you 
 
 Install the latest version of Chef:
     sudo gem install chef
-    
+
+To satisfy the requirements of the nokogiri gem you must also follow the instructions here:
+    http://nokogiri.org/tutorials/installing_nokogiri.html    
+
 Install the knife rackspace cluster Gem:
     sudo gem install knife-rackspace-cluster
     
-To satisfy the requirements of the nokogiri gem you must also follow the instructions here:
-    http://nokogiri.org/tutorials/installing_nokogiri.html
+
     
 = CONFIGURATION
 
