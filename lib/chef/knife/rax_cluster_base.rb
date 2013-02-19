@@ -121,7 +121,7 @@ class Chef
 			  if not ('200'..'204').include? response.code
 					  puts "Error making web call"
 					  puts "Response code : #{response.code}"
-					  #puts "Response body : #{response.body}"
+					  puts "Response body : #{response.body}"
 					  #puts "Response Headers : #{response.headers}"
 			  end
 			  return response
