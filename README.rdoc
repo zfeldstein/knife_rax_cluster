@@ -15,6 +15,10 @@ To satisfy the requirements of the nokogiri gem you must also follow the instruc
 Install the knife rackspace cluster Gem:
     sudo gem install knife-rackspace-cluster
     
+There are issues with fog 1.9.0 creating rackspace servers. You can do the following until this is fixed:
+    sudo gem uninstall fog --version 1.9.0
+    sudo gem install fog --version 1.8.0
+    
 
     
 = CONFIGURATION
