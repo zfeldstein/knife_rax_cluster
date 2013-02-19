@@ -2,7 +2,7 @@
 
 = Description:
 
-This plugin allows you to create rackspace "clusters". This tool hooks into opscode's knife-rackspace ruby gem. A rackspace cluster is a group of nodes that are behind a cloud load balancer. This tool allows you to specify a blueprint file containg: quantity of nodes, chef run list and environment, flavor and image to be used.
+This plugin allows you to create rackspace "clusters". This tool hooks into opscode's knife-rackspace ruby gem. A rackspace cluster is a group of nodes that are behind a cloud load balancer. This tool allows you to specify a blueprint file that contains: quantity of nodes, chef run list and environment, flavor and image to be used.
 
 = Installation
 
@@ -45,7 +45,7 @@ This will create a file called map_template.json in your current directory. An e
 
 
     }
-This will tell the plugin to build 2 servers and use the settings specified. The servers will be named based on your name_convetion setting and random digits will be appened to the name.The servers will be built using threads if you're using ruby 1.9. Once the servers have been built and bootstrapped with chef a load balancer will be created and the nodes will be added to the LB pool.
+This will tell the plugin to build 2 servers and use the settings specified. The servers will be named based on your name_convetion setting and random digits will be appeneded to the name. The servers will be built using threads if you're using ruby 1.9. Once the servers have been built and bootstrapped with chef a load balancer will be created and the nodes will be added to the LB pool.
 
 To create your cluster you can run the following command:
     knife rax cluster create web_heads -B map_template.json -r ord
@@ -67,7 +67,7 @@ This command will allow you to change the chef environment and chef run_lists of
     
 = knife rax cluster expand
 
-This command will allow you to add additonal nodes to an existing rax cluster. You will need to pass it a load balancer ID that you wish to add nodes to as well as the -B (blueprint) flag for instructions on the new nodes.
+This command will allow you to add additional  nodes to an existing rax cluster. You will need to pass it a load balancer ID that you wish to add nodes to as well as the -B (blueprint) flag for instructions on the new nodes.
 
 Example:
     knife rax cluster expand 1234 -B map_template.json -r ord
@@ -78,3 +78,21 @@ This command takes the load balancer ID as an argument and the -r (region) switc
 
 Example:
     knife rax cluster delete 1234 -r ord
+    
+= LICENSE
+
+Author:: Zack Feldstein (<zack.feldstein@rackspace.com>)
+Copyright:: Copyright (c) 2013 Zack Feldstein
+License:: Apache License, Version 2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
