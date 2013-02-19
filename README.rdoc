@@ -2,7 +2,7 @@
 
 = Description:
 
-This plugin allows you to create rackspace "clusters". This tool hooks into opscode's knife-rackspace ruby gem. A rackspace cluster is a group of nodes that are behind a cloud load balancer. This tool allows you to specify a blueprint file that contains: quantity of nodes, chef run list and environment, flavor and image to be used.
+This tool hooks into opscode's knife-rackspace ruby gem. This plugin allows you to create rackspace "clusters". A rackspace cluster is a group of nodes that are behind a cloud load balancer. This tool will build your nodes and automatically put them behind a cloud loadbalancer. This tool allows you to specify a blueprint file that contains: quantity of nodes, chef run list and environment, flavor and image to be used.
 
 = Installation
 
