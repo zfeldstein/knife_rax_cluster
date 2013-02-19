@@ -15,7 +15,7 @@ To satisfy the requirements of the nokogiri gem you must also follow the instruc
 Install the knife rackspace cluster Gem:
     sudo gem install knife-rackspace-cluster
     
-There are issues with fog 1.9.0 creating rackspace servers. You can do the following until this is fixed:
+There are issues with fog 1.9.0 creating rackspace servers. This plugin has a version contraint on fog 1.8.0. If you already have 1.9.0 installed you can do the following until this is fixed:
     sudo gem uninstall fog --version 1.9.0
     sudo gem install fog --version 1.8.0
     
@@ -87,6 +87,12 @@ This command takes the load balancer ID as an argument and the -r (region) switc
 
 Example:
     knife rax cluster delete 1234 -r ord
+    
+= Troubleshooting
+This tool 
+If you run into errors such as this:
+    Fog::Compute::RackspaceV2::BadRequest: Fog::Compute::RackspaceV2::BadRequest
+Make sure to check that values in your blue print file are valid. For example if you specify an incorrect image or flavor you may see this message. Also check that you are passing the correct rackspace username and api key.
     
 = LICENSE
 
