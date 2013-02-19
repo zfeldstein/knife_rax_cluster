@@ -92,7 +92,7 @@ class Chef
       def create_lb(instances)
         lb_request = {
           "loadBalancer" => {
-            "name" => @lb_name,
+            "name" => @lb_name.to_s + "_cluster",
             "port" => config[:port] || '80',
             "protocol" => config[:protocol] || 'HTTP',
             "algorithm" => config[:algorithm] || 'ROUND_ROBIN',

@@ -141,6 +141,11 @@ class Chef
 				lb_returned = {'auth_token' => lb_data['auth']['token']['id'], 'lb_urls' => lb_data['auth']['serviceCatalog']['cloudLoadBalancers'] }
 				return lb_returned
 			end
+			def msg_pair(label, value, color=:cyan)
+			  if value && !value.to_s.empty?
+				puts "#{ui.color(label, color)}: #{value}"
+			  end
+			end
 			
 		end
 	end
