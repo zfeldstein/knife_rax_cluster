@@ -45,5 +45,36 @@ This will create a file called map_template.json in your current directory. An e
 
 
     }
-This will tell the plugin to build 2 servers and use the settings specified. The servers will be built using threads if you're using ruby 1.9. Once the servers have been built and bootstrapped with chef a load balancer will be created and the nodes will be added to the LB pool.
+This will tell the plugin to build 2 servers and use the settings specified. The servers will be named based on your name_convetion setting and random digits will be appened to the name.The servers will be built using threads if you're using ruby 1.9. Once the servers have been built and bootstrapped with chef a load balancer will be created and the nodes will be added to the LB pool.
 
+To create your cluster you can run the following command:
+    knife rax cluster create web_heads -B map_template.json -r ord
+If you do not specify any other parameters this will create a load balancer that is listening on port 80 using the ROUND_ROBIN algorithm. It will also rename the load balancer to web_heads_cluster so the plugin can search for valid clusters using the list sub command. You must specify the -r(region) switch to tell the plugin what data center to create your load balancer in. 
+
+= knife rax cluster list
+
+This command will look for any load balancers in the specified data center with the name suffixed by _cluster. It will return the load balancer name, Load balancer id, LB algorithm, LB protocol, LB node Count. You must specify the -r (region) to tell the plugin what data center to look in.
+
+Example:
+    knife rax cluster list -r ord
+    
+= knife rax cluster change
+
+This command will allow you to change the chef environment and chef run_lists of the existing members of the cluster. You will need to pass the plugin a load balancer ID of your cluster and the --run-list or the --chef-env flags. Examples
+
+    knife rax cluster change 1234 --run-list 'recipe[apt],role[base]'
+    knife rax cluster change 1234 --chef-env prod
+    
+= knife rax cluster expand
+
+This command will allow you to add additonal nodes to an existing rax cluster. You will need to pass it a load balancer ID that you wish to add nodes to as well as the -B (blueprint) flag for instructions on the new nodes.
+
+Example:
+    knife rax cluster expand 1234 -B map_template.json -r ord
+    
+= knife rax cluster delete
+
+This command takes the load balancer ID as an argument and the -r (region) switch. Running this command will delete all the servers that are apart of the cluster from the rackspace cloud as well as from your chef server.
+
+Example:
+    knife rax cluster delete 1234 -r ord
