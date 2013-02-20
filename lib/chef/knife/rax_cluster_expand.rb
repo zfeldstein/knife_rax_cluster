@@ -34,7 +34,11 @@ class Chef
       :description => "Load balancer region (only supports ORD || DFW)",
       :proc => Proc.new { |lb_region| Chef::Config[:knife][:lb_region] = lb_region},
       :default => "ORD"
-	  
+#================================================================
+# This will take a blueprint file and call the raxClusterCreate
+# Class to handle parsing and building the nodes. It will then
+# update the LB ID passed on the CLI with the nodes and meta data
+#================================================================
 	  def expand_cluster
         rs_cluster = RaxClusterCreate.new
         rs_cluster.config[:blue_print]  = config[:blue_print]

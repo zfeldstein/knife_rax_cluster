@@ -29,7 +29,11 @@ class Chef
       :long => "--chef-env environment",
       :description => "Pass a comma delimted run list --run-list 'recipe[apt],role[base]'",
       :proc => Proc.new { |chef_env| Chef::Config[:knife][:chef_env] = chef_env}
-      
+#=====================================================================
+# Takes an array of hashes of instance data and a block that provides
+# what work should be done. This function will look up the chef object
+# For the node and pass that object into the calling block. 
+#=====================================================================
       def change_chef_vars(instances, &block)
         instances.each { |inst|
           query = "name:#{inst['server_name']}"
@@ -39,6 +43,11 @@ class Chef
           end
         }
       end
+#=====================================================================
+# Looks up the LB meta data and grabs the server name for every node
+# In the LB pool
+# Looks them up in chef and changes there run_list or chef_env
+#=====================================================================
       def run
         if !config[:run_list] and !config[:chef_env]
           ui.fatal "Please specify either --run-list or --chef-env to change on your cluster"

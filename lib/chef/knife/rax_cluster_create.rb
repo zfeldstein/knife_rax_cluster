@@ -66,7 +66,10 @@ class Chef
       #:long => "--session-persistence session_persistence_on_or_off",
       #:description => "Load balancer session persistence on or off",
       #:proc => Proc.new { |session_persistence| Chef::Config[:knife][:session_persistence] = session_persistence}
-
+#================================================================
+# Generates a template json file in the current dir called
+# map_template.json
+#================================================================
       def generate_map_template
            file_name = "./map_template.json"
            template = %q(
@@ -89,6 +92,12 @@ class Chef
      
            File.open(file_name, 'w') { |file| file.write(template)}
       end
+#================================================================
+# Takes instance array of hash data and creates a load balancer.
+# Will put all nodes created in the LB pool (using private IP)
+# Will store servers in meta data using key = server name
+# value = uuid, this is for updates on chef vars on these nodes
+#================================================================
       def create_lb(instances)
         lb_request = {
           "loadBalancer" => {
@@ -131,14 +140,34 @@ class Chef
         lb_details['loadBalancer']['virtualIps'].each {|lb| (lb['ipVersion'] == "IPV4") ? lb_ip = lb['address'] : "not_found"}
         ui.msg "Load Balancer IP Address: #{lb_ip}"
       end
-      
-      
+#============================================================
+# Parses json, creates blue_prints w/ specified chef vars
+# If ruby 1.9 is used builds will be spun up with Threads
+# If update_cluster is specified, an LB will not be created
+# an array of instance data will be returned to the caller
+#============================================================
       def deploy(blue_print,update_cluster=nil)
         (File.exist?(blue_print)) ? map_contents = JSON.parse(File.read(blue_print)) : map_contents = JSON.parse(blue_print)
         sleep_interval = 1
         instances = []
         if map_contents.has_key?("blue_print")
           bp_values = map_contents['blue_print']
+          unless bp_values.has_key?("image_ref")
+            ui.fatal "You must specify an image_ref, run the -G command to generate a template blueprint"
+            exit(1)
+          end
+          unless bp_values.has_key?("name_convention")
+            ui.fatal "You must specify a name_convention, run the -G command to generate a template blueprint"
+            exit(1)
+          end
+          unless bp_values.has_key?("flavor")
+            ui.fatal "You must specify a flavor, run the -G command to generate a template blueprint"
+            exit(1)
+          end
+          unless bp_values.has_key?("quantity")
+            ui.fatal "You must specify a quantity of servers, run the -G command to generate a template blueprint"
+            exit(1)
+          end
           bootstrap_nodes = []
           quantity = bp_values['quantity'].to_i
               quantity.times do |node_name|
@@ -156,7 +185,6 @@ class Chef
                   rescue
                     ui.msg "Bootstrapping failed"
                   end
-                  
               end
               quantity.times do |times|
                 if quantity > 20
@@ -178,11 +206,7 @@ class Chef
         else
           create_lb(instances)
         end
-        
-        
-        
       end
-
       def run
         #Generate template config
 		if config[:generate_map_template]
@@ -190,8 +214,6 @@ class Chef
 		  ui.msg "Map template saved as ./map_template.json"
 		  exit()
 		end
-        
-        
         if @name_args.empty? or @name_args.size > 1
 		  ui.fatal "Please specify a single name for your cluster"
 		  exit(1)

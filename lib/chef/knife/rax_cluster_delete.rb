@@ -21,7 +21,11 @@ class Chef
       :description => "Load balancer region (only supports ORD || DFW)",
       :proc => Proc.new { |lb_region| Chef::Config[:knife][:lb_region] = lb_region},
       :default => "ORD"
-
+#=====================================================================
+# Looks up all nodes from lb meta data, deletes them from chef and nova
+# Via knife rackspace method
+# AFter node deletion it will delete the LB
+#=====================================================================
       def delete_cluster
         lb_authenticate = authenticate()
         lb_url = ""

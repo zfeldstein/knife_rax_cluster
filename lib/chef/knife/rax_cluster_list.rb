@@ -20,8 +20,10 @@ class Chef
       :proc => Proc.new { |lb_region| Chef::Config[:knife][:lb_region] = lb_region},
       :default => "ORD"
       
-      
-      
+
+#=====================================================================
+# Looks for lb's named $variable_cluster and lists them
+#=====================================================================
       def run
         lb_auth = authenticate
         headers = {"x-auth-token" => lb_auth['auth_token'], "content-type" => "application/json"}

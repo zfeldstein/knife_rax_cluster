@@ -1,4 +1,7 @@
-
+#=====================================================================
+# Had to subclass this from knife-rackspace, neeeded to return the
+# Instance data after build/bootstrap
+#=====================================================================
 require 'chef/knife/rackspace_server_create'
 class Chef
   class Knife
