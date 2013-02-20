@@ -45,6 +45,8 @@ This will create a file called map_template.json in your current directory. An e
     {
         "name_convention" : "web",
         "run_list" : [
+            "recipe[apt]",
+            "role[base]"
         ],
         "quantity" : 2,
         "chef_env" : "dev",
