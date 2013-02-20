@@ -89,10 +89,15 @@ Example:
     knife rax cluster delete 1234 -r ord
     
 = Troubleshooting
-This tool 
 If you run into errors such as this:
     Fog::Compute::RackspaceV2::BadRequest: Fog::Compute::RackspaceV2::BadRequest
 Make sure to check that values in your blue print file are valid. For example if you specify an incorrect image or flavor you may see this message. Also check that you are passing the correct rackspace username and api key.
+
+It's recomended to use Ruby 1.9 and gems 1.8 with this plugin. If you're having trouble installing ruby 1.9 with your OS, try using chef's installer located here:
+    http://www.opscode.com/chef/install/
+This will put ruby and gems under:
+    /opt/chef/embedded/bin
+This is a quick way to get ruby 1.9 running on a system. 
     
 = LICENSE
 
