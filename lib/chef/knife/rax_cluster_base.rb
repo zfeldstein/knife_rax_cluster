@@ -108,9 +108,9 @@ class Chef
 			  #Get to work boy! This is Ruby!
 			  uri = URI.parse(uri)
 			  http = Net::HTTP.new(uri.host, uri.port)
-			  if uri.host =~ /https/
+			  #if uri.host =~ /https/
 				  http.use_ssl = true
-			  end
+			  #end
 			  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 			  request = eval verbs[httpVerb]
 			  if httpVerb == 'post' or httpVerb == 'put'

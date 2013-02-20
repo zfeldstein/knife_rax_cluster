@@ -1,6 +1,5 @@
 require 'chef/knife/rax_cluster_base'
 require 'chef/knife/rackspace_server_delete'
-
 class Chef
   class Knife
     class RaxClusterExpand < Knife

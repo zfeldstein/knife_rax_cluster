@@ -1,3 +1,5 @@
+require 'chef/knife/rax_cluster_base'
+
 class Chef
   class Knife
     class RaxClusterChange < Knife
