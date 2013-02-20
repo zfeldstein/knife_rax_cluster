@@ -1,15 +1,15 @@
 Gem::Specification.new do |s|
-  s.name = 'knife-rax-cluster'
-  s.version = '0.1.0'
-  s.date = '2013-01-27'
+  s.name = 'knife-rackspace-cluster'
+  s.version = '0.0.5'
+  s.date = '2013-02-19'
   s.summary = "Knife rax cluster"
   s.description = "Creates rax clusters"
   s.authors = ["zack feldstein"]
-  s.email = 'zack.feldstein@rackspace.com'
+  s.email = 'pcguru419@yahoo.com'
   s.files = Dir.glob("{lib}/**/*")
   s.homepage = "http://github.com/jrcloud/knife_rax_cluster"
-s.add_dependency "knife-rackspace"
-
+  s.add_dependency "fog", "= 1.8.0"
+  s.add_dependency "knife-rackspace"
 end
 
 
