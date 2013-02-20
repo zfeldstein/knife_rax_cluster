@@ -19,6 +19,9 @@ There are issues with fog 1.9.0 creating rackspace servers. This plugin has a ve
     sudo gem uninstall fog --version 1.9.0
     sudo gem install fog --version 1.8.0
     
+Install Make
+    sudo apt-get install make
+    sudo yum install make
 
     
 = CONFIGURATION
