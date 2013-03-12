@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'knife-rackspace-cluster'
-  s.version = '0.0.6'
+  s.version = '0.0.8'
   s.date = '2013-02-19'
   s.summary = "Knife rax cluster"
   s.description = "Creates rax clusters"
