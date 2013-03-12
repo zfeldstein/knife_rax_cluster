@@ -29,7 +29,6 @@ AFter node deletion it will delete the LB
       def delete_cluster
         lb_authenticate = authenticate()
         lb_url = ""
-        puts config[:lb_region]
         headers = {"x-auth-token" => lb_authenticate['auth_token'], "content-type" => "application/json"}
         lb_authenticate['lb_urls'].each {|lb|
           if config[:lb_region].to_s.downcase ==  lb['region'].to_s.downcase

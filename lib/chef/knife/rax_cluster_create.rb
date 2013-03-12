@@ -213,10 +213,6 @@ an array of instance data will be returned to the caller
                               }
               end
             end
-        
-          
-        
-        
         if update_cluster
           instance_return = {}
           if failed_attempts > 0
