@@ -7,7 +7,6 @@ require 'chef/knife'
   
 class Chef
 	class Knife
-		11874 wurzbach 78230
 		
 	
 		module RaxClusterBase
