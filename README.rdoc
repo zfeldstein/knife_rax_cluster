@@ -74,6 +74,10 @@ This command will look for any load balancers in the specified data center with 
 Example:
     knife rax cluster list -r ord
     
+= knife rax cluser show LB_ID -r ord
+
+This command takes a load balancer ID of one of your clusters and the -r switch to tell the tool what region the LB resides. It will display information regarding the LB and the nodes belonging to it. 
+    
 = knife rax cluster change
 
 This command will allow you to change the chef environment and chef run_lists of the existing members of the cluster. You will need to pass the plugin a load balancer ID of your cluster and the --run-list or the --chef-env flags. Examples
