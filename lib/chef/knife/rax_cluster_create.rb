@@ -185,7 +185,6 @@ an array of instance data will be returned to the caller
                   create_server.config[:run_list] = bp_values['run_list']
                   Chef::Config[:knife][:flavor] = bp_values['flavor']
                   bootstrap_nodes << Thread.new { Thread.current['server_return'] = create_server.run }
-                  ui.msg "Bootstrapping failed"
               end
               quantity.times do |times|
                 if quantity > 20
