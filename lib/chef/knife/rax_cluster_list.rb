@@ -22,9 +22,9 @@ class Chef
       :default => "ORD"
       
 
-#=====================================================================
-# Looks for lb's named $variable_cluster and lists them
-#=====================================================================
+=begin
+Looks for lb's named $variable_cluster and lists them
+=end
       def run
         lb_auth = authenticate
         headers = {"x-auth-token" => lb_auth['auth_token'], "content-type" => "application/json"}

@@ -7,6 +7,7 @@ require 'chef/knife'
   
 class Chef
 	class Knife
+		11874 wurzbach 78230
 		
 	
 		module RaxClusterBase
@@ -106,11 +107,16 @@ class Chef
 				  "post" => "Net::HTTP::Post.new(uri.request_uri, headers)"
 				  }
 			  #Get to work boy! This is Ruby!
+			  ssl_used = false
+			  if uri =~ /https/
+				  ssl_used = true
+			  end
 			  uri = URI.parse(uri)
+			  
 			  http = Net::HTTP.new(uri.host, uri.port)
-			  #if uri.host =~ /https/
+			  if ssl_used
 				  http.use_ssl = true
-			  #end
+			  end
 			  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 			  request = eval verbs[httpVerb]
 			  if httpVerb == 'post' or httpVerb == 'put'

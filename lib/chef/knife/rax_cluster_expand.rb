@@ -33,16 +33,18 @@ class Chef
       :description => "Load balancer region (only supports ORD || DFW)",
       :proc => Proc.new { |lb_region| Chef::Config[:knife][:lb_region] = lb_region},
       :default => "ORD"
-#================================================================
-# This will take a blueprint file and call the raxClusterCreate
-# Class to handle parsing and building the nodes. It will then
-# update the LB ID passed on the CLI with the nodes and meta data
-#================================================================
+=begin
+This will take a blueprint file and call the raxClusterCreate
+Class to handle parsing and building the nodes. It will then
+update the LB ID passed on the CLI with the nodes and meta data
+=end
 	  def expand_cluster
         rs_cluster = RaxClusterCreate.new
         rs_cluster.config[:blue_print]  = config[:blue_print]
         rs_cluster.lb_name = @name_args[0]
         instance_return = rs_cluster.deploy(config[:blue_print],'update_cluster')
+        instance_errors = instance_return['error_text']
+        instance_return = instance_return['instances']
         lb_auth = authenticate()
         puts lb_auth['auth_token']
         headers = {"x-auth-token" => lb_auth['auth_token'], "content-type" => "application/json"}
@@ -77,7 +79,10 @@ class Chef
           lb_stats = make_web_call("get", lb_status, headers)
           lb_stats = JSON.parse(lb_stats.body)
         end
-        node_request = make_web_call("post", node_url, headers, node_data_request.to_json)        
+        node_request = make_web_call("post", node_url, headers, node_data_request.to_json)
+        if instance_errors
+          ui.msg "There were problems bootstrapping/booting nodes, verify with knife node list or nova list to track down issues"
+        end
         ui.msg "Load balancer id #{@lb_id} has been updated"
         
 	  end

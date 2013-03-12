@@ -66,10 +66,10 @@ class Chef
       #:long => "--session-persistence session_persistence_on_or_off",
       #:description => "Load balancer session persistence on or off",
       #:proc => Proc.new { |session_persistence| Chef::Config[:knife][:session_persistence] = session_persistence}
-#================================================================
-# Generates a template json file in the current dir called
-# map_template.json
-#================================================================
+=begin
+Generates a template json file in the current dir called
+map_template.json
+=end
       def generate_map_template
            file_name = "./map_template.json"
            template = %q(
@@ -92,13 +92,13 @@ class Chef
      
            File.open(file_name, 'w') { |file| file.write(template)}
       end
-#================================================================
-# Takes instance array of hash data and creates a load balancer.
-# Will put all nodes created in the LB pool (using private IP)
-# Will store servers in meta data using key = server name
-# value = uuid, this is for updates on chef vars on these nodes
-#================================================================
-      def create_lb(instances)
+=begin
+Takes instance array of hash data and creates a load balancer.
+Will put all nodes created in the LB pool (using private IP)
+Will store servers in meta data using key = server name
+value = uuid, this is for updates on chef vars on these nodes
+=end
+      def create_lb(instances,error_text=nil)
         lb_request = {
           "loadBalancer" => {
             "name" => @lb_name.to_s + "_cluster",
@@ -139,13 +139,16 @@ class Chef
         lb_ip = ""
         lb_details['loadBalancer']['virtualIps'].each {|lb| (lb['ipVersion'] == "IPV4") ? lb_ip = lb['address'] : "not_found"}
         ui.msg "Load Balancer IP Address: #{lb_ip}"
+        if error_text
+          ui.msg "Some nodes failed to bootstrap or boot, verify with knife node list and or nova list to track down errors"
+        end
       end
-#============================================================
-# Parses json, creates blue_prints w/ specified chef vars
-# If ruby 1.9 is used builds will be spun up with Threads
-# If update_cluster is specified, an LB will not be created
-# an array of instance data will be returned to the caller
-#============================================================
+=begin
+Parses json, creates blue_prints w/ specified chef vars
+If ruby 1.9 is used builds will be spun up with Threads
+If update_cluster is specified, an LB will not be created
+an array of instance data will be returned to the caller
+=end
       def deploy(blue_print,update_cluster=nil)
         (File.exist?(blue_print)) ? map_contents = JSON.parse(File.read(blue_print)) : map_contents = JSON.parse(blue_print)
         sleep_interval = 1
@@ -169,6 +172,7 @@ class Chef
             exit(1)
           end
           bootstrap_nodes = []
+          failed_attempts = 0 
           quantity = bp_values['quantity'].to_i
               quantity.times do |node_name|
                   node_name  = rand(900000000)
@@ -180,18 +184,27 @@ class Chef
                   Chef::Config[:environment] = bp_values['chef_env']
                   create_server.config[:run_list] = bp_values['run_list']
                   Chef::Config[:knife][:flavor] = bp_values['flavor']
-                  begin
-                    bootstrap_nodes << Thread.new { Thread.current['server_return'] = create_server.run }
-                  rescue
-                    ui.msg "Bootstrapping failed"
-                  end
+                  bootstrap_nodes << Thread.new { Thread.current['server_return'] = create_server.run }
+                  ui.msg "Bootstrapping failed"
               end
               quantity.times do |times|
                 if quantity > 20
-                  sleep_interval = 3
+                  sleep_interval = 6
+                else
+                  sleep_interval = 4
                 end
                 sleep(sleep_interval)
-                bootstrap_nodes[times].join              
+                begin
+                  bootstrap_nodes[times].join
+                rescue
+                  failed_attempts += 1
+                  if failed_attempts == quantity
+                    ui.fatal "All servers failed to bootstrap, check network connectivy and vet all cookbooks used"
+                    exit(1)
+                  else
+                    next
+                  end
+                end
                 instances << {"server_name" => bootstrap_nodes[times]['server_return']['server_name'],
                               "ip_address" => bootstrap_nodes[times]['server_return']['private_ip'],
                               "uuid" => bootstrap_nodes[times]['server_return']['server_id'],
@@ -200,11 +213,27 @@ class Chef
                               "run_list" => bp_values['run_list']
                               }
               end
-        end
+            end
+        
+          
+        
+        
         if update_cluster
-          return instances
+          instance_return = {}
+          if failed_attempts > 0
+            instance_return = {'instances' => instances, "error_text" => true}
+          else
+            instance_return = {'instances' => instances, "error_text" => false}
+          end
+          
+          return instance_return
         else
-          create_lb(instances)
+          if failed_attempts > 0
+            create_lb(instances,true)
+          else
+            create_lb(instances)  
+          end
+          
         end
       end
       def run
